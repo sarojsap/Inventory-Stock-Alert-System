@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+lib/
+lib64/
+bin/
+include/
+share/
+pip-wheel-metadata/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+
+# Django-specific
+*.log
+*.pot
+local_settings.py
+db.sqlite3
+/media/
+/static_collected/
+
+# IDE and OS-specific
+.DS_Store
+.vscode/
+.idea/
+
+# Testing and coverage
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
