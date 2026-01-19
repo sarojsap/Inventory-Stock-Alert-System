@@ -29,3 +29,6 @@ class DashboardStatsView(APIView):
         }
 
         return Response(data)
+    
+def dashboard_ui(request):
+    return render(request, 'inventory/dashboard.html')

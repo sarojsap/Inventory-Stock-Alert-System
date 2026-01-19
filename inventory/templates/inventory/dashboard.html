@@ -1,0 +1,68 @@
+{% extends "inventory/base.html" %}
+
+{% block content %}
+    <h1 class="text-3xl text-center font-bold mb-6">Warehouse Dashboard</h1>
+
+    <!-- Stats Grid -->
+     <div class="grid grid-cols-3 gap-4 mb-8">
+        <!--Card 1 Total Products-->
+        <div class="bg-blue-100 p-4 rounded text-center">
+            <h3 class="text-blue-800 font-bold">Total Products</h3>
+            <p id="total-products" class="text-2xl mt-2">Loading...</p>
+        </div>
+        <!--Card 2 Inventory Value-->
+        <div class="bg-blue-100 p-4 rounded text-center">
+            <h3 class="text-blue-800 font-bold">Inventory Value</h3>
+            <p id="total-value" class="text-2xl mt-2">Loading...</p>
+        </div>
+        <!--Card 3 Low Stock-->
+        <div class="bg-blue-100 p-4 rounded text-center">
+            <h3 class="text-blue-800 font-bold">Low Stock</h3>
+            <p id="low-stock" class="text-2xl mt-2">Loading...</p>
+        </div>
+     </div>
+
+
+    {% comment %} <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/dashboard/')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('total-products').innerText = data.total_products;
+                document.getElementById('total-value').innerText = "RS " + data.total_inventory_value.toLocaleString('en-IN');
+                document.getElementById('low-stock').innerText = data.low_stock_products;
+            })
+            .catch(error => {
+                console.error('Error fetching dashboard data:', error);
+            });
+    });
+    </script>
+ {% endcomment %}
+
+     <script>
+async function fetchDashboardData() {
+    try {
+        const response = await fetch('/api/dashboard/');
+        const data = await response.json();
+
+        // Select elements
+        const totalProductsEl = document.getElementById('total-products');
+        const totalValueEl = document.getElementById('total-value');
+        const lowStockEl = document.getElementById('low-stock');
+
+        // Update elements
+        totalProductsEl.innerText = new Intl.NumberFormat('en-IN').format(data.total_products);
+        totalValueEl.innerText = new Intl.NumberFormat('ne-NP', { style: 'currency', currency: 'NPR' }).format(data.total_inventory_value);
+        lowStockEl.innerText = new Intl.NumberFormat('en-IN').format(data.low_stock_products || data.low_stock_count);
+
+    } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+    }
+}
+
+// Call function when page loads
+document.addEventListener('DOMContentLoaded', fetchDashboardData);
+</script>
+
+
+{% endblock content %}
