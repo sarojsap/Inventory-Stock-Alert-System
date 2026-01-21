@@ -4,7 +4,7 @@
     <h1 class="text-3xl text-center font-bold mb-6">Warehouse Dashboard</h1>
 
     <!-- Stats Grid -->
-     <div class="grid grid-cols-3 gap-4 mb-8">
+    <div class="grid grid-cols-3 gap-4 mb-8">
         <!--Card 1 Total Products-->
         <div class="bg-blue-100 p-4 rounded text-center">
             <h3 class="text-blue-800 font-bold">Total Products</h3>
@@ -20,49 +20,188 @@
             <h3 class="text-blue-800 font-bold">Low Stock</h3>
             <p id="low-stock" class="text-2xl mt-2">Loading...</p>
         </div>
+    </div>
+
+    <!--Report Export Card-->
+    <div class="bg-white p-6 rounded shadow mt-8">
+        <h2 class="text-xl font-bold mb-4">Export Report</h2>
+        <div class="flex gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium">Start Date</label>
+                <input type="date" id="start-date" class="border p-2 rounded">
+            </div>
+            <div>
+                <label class="block text-sm font-medium">End Date</label>
+                <input type="date" id="end-date" class="border p-2 rounded">
+            </div>
+            <button onclick="downloadReport()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Download CSV</button>
+            
+        </div>
+    </div>
+
+     <!--Action Card-->
+     <div class="bg-white p-6 rounded shadow mt-8">
+        <h2 class="text-xl font-bold mb-4">Record Stock Movements</h2>
+        <form id="movement-form" class="space-y-4">
+
+            <!--Product Select-->
+            <div>
+                <label class="block text-sm font-medium">Product</label>
+                <select id="product-select" class="w-full border p-2 rounded" required>
+                    <option value=""></option>
+                </select>
+            </div>
+
+            <!--Quantity Input-->
+            <div>
+                <label class="block text-sm font-medium">Quantity</label>
+                <input type="number" id="qty-input" class="w-full border p-2 rounded" min="1" required>
+            </div>
+
+            <!--Type Select-->
+            <div>
+                <label class="block text-sm font-medium">Type</label>
+                <select id="type-select" class="w-full border p-2 rounded">
+                    <option value="In">Stock In (+)</option>
+                    <option value="Out">Stock Out (-)</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">Submit</button>
+
+        </form>
      </div>
 
 
-    {% comment %} <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        fetch('/api/dashboard/')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('total-products').innerText = data.total_products;
-                document.getElementById('total-value').innerText = "RS " + data.total_inventory_value.toLocaleString('en-IN');
-                document.getElementById('low-stock').innerText = data.low_stock_products;
-            })
-            .catch(error => {
-                console.error('Error fetching dashboard data:', error);
-            });
-    });
-    </script>
- {% endcomment %}
 
-     <script>
+
+<script>
+/* -------------------- DASHBOARD DATA -------------------- */
 async function fetchDashboardData() {
     try {
         const response = await fetch('/api/dashboard/');
         const data = await response.json();
 
-        // Select elements
-        const totalProductsEl = document.getElementById('total-products');
-        const totalValueEl = document.getElementById('total-value');
-        const lowStockEl = document.getElementById('low-stock');
+        document.getElementById('total-products').innerText =
+            new Intl.NumberFormat('en-IN').format(data.total_products);
 
-        // Update elements
-        totalProductsEl.innerText = new Intl.NumberFormat('en-IN').format(data.total_products);
-        totalValueEl.innerText = new Intl.NumberFormat('ne-NP', { style: 'currency', currency: 'NPR' }).format(data.total_inventory_value);
-        lowStockEl.innerText = new Intl.NumberFormat('en-IN').format(data.low_stock_products || data.low_stock_count);
+        document.getElementById('total-value').innerText =
+            new Intl.NumberFormat('ne-NP', {
+                style: 'currency',
+                currency: 'NPR'
+            }).format(data.total_inventory_value);
+
+        document.getElementById('low-stock').innerText =
+            new Intl.NumberFormat('en-IN').format(
+                data.low_stock_count
+            );
 
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
     }
 }
 
-// Call function when page loads
-document.addEventListener('DOMContentLoaded', fetchDashboardData);
-</script>
+/* -------------------- LOAD PRODUCTS -------------------- */
+async function loadProducts() {
+    try {
+        const response = await fetch('/api/products/');
+        const products = await response.json();
 
+        const select = document.getElementById('product-select');
+        select.innerHTML = '';
+
+        products.forEach(product => {
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.textContent = `${product.name} (Current: ${product.quantity})`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading products:', error);
+    }
+}
+
+/* -------------------- CSRF HELPER -------------------- */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function downloadReport() {
+    const start = document.getElementById('start-date').value;
+    const end = document.getElementById('end-date').value;
+    
+    // Construct the URL with query parameters
+    let url = `/reports/export/?`;
+    if (start) url += `start_date=${start}&`;
+    if (end) url += `end_date=${end}`;
+    
+    // Trigger the browser to visit this URL
+    window.location.href = url;
+}
+
+/* -------------------- FORM SUBMIT -------------------- */
+document.getElementById('movement-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const productId = document.getElementById('product-select').value;
+    const quantity = parseInt(document.getElementById('qty-input').value);
+    const movementType = document.getElementById('type-select').value;
+
+    const csrftoken = getCookie('csrftoken');
+
+    try {
+        const response = await fetch('/api/stocks/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                product: productId,
+                quantity: quantity,
+                movement_type: movementType
+            })
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            console.error("Server Error:", responseData)
+            alert('Failed: ' + JSON.stringify(responseData));
+            return;
+        }
+
+        alert('Success');
+
+        // Refresh UI instantly
+        fetchDashboardData();
+        loadProducts();
+
+        // Reset form
+        e.target.reset();
+
+    } catch (error) {
+        console.error(error);
+        alert('Error recording stock movement');
+    }
+});
+
+
+/* -------------------- INITIAL LOAD -------------------- */
+document.addEventListener('DOMContentLoaded', () => {
+    fetchDashboardData();
+    loadProducts();
+});
+</script>
 
 {% endblock content %}
