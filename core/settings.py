@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -51,7 +52,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -139,3 +140,8 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'optional' # or 'mandatory' if you set up email sending
 LOGIN_REDIRECT_URL = 'dashboard'                # Where to go after login (Dashboard)
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+# Skips the confirmation page and redirects straight to Google
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Email Settings for Development
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
