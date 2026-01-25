@@ -2,6 +2,7 @@ import csv
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.utils.dateparse import parse_date
 from django.db.models import Count, Sum, F
 from rest_framework import viewsets, mixins
@@ -19,7 +20,8 @@ class StockMovementViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, views
     queryset = StockMovement.objects.all()
     serializer_class = StockMovementSerializer
 
-
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 class DashboardStatsView(APIView):
     def get(self, request):
         total_products = Product.objects.count()
@@ -34,7 +36,7 @@ class DashboardStatsView(APIView):
         }
 
         return Response(data)
-    
+@login_required
 def dashboard_ui(request):
     return render(request, 'inventory/dashboard.html')
 
@@ -60,15 +62,18 @@ class StockMovementExportView(APIView):
 
         # 4. Create the CSV Writer
         writer = csv.writer(response)
-        writer.writerow(['Date', 'Product', 'Type', 'Quantity', 'User Note'])   # Header Row
+        writer.writerow(['Date', 'Product', 'Type', 'Quantity', 'User', 'User Note'])   # Header Row
 
         # 5. Write Data
         for movement in queryset:
+            user_email = movement.user.email if movement.user else "Unknown"
             writer.writerow([
                 movement.date.strftime("%m/%d/%Y %H:%M"),
                 movement.product.name,
                 movement.movement_type,
                 movement.quantity,
+                user_email,
                 movement.note
             ])
         return response
+    

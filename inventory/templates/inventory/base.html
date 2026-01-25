@@ -7,6 +7,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-10">
+
+    <nav class="bg-white shadow p-4 mb-6 flex justify-between">
+        <div class="font-bold text-xl">Inventory System</div>
+        <div>
+            {% if user.is_authenticated %}
+                <span class="mr-4"> <span class="text-green-600 font-bold">Hello,</span> {{user.email}}</span>
+                <!--AllAuth provides this logout URL-->
+                <form action="{% url 'account_logout' %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-red-400 text-white px-1 py-1 rounded hover:bg-red-600">LogOut</button>
+                </form>
+            {% else %}
+                <a href="{% url 'account_login' %}" class="text-blue-500 mr-2">Login</a>
+                <a href="{% url 'account_signup' %}" class="bg-blue-500 text-white px-3 py-1 rounded">Signup</a>
+            {% endif %}
+        </div>
+    </nav>
+
     <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
         {% block content %}
         {% endblock content %}
